@@ -1,0 +1,8 @@
+*.pkl
+*.env
+*.DS_Store
+*.png
+*.jpeg
+*.obj
+*.ipynb
+__pycache__/
