@@ -9,6 +9,8 @@ import torch
 from .utils import pad_seq, bytes_to_file, read_split_image, round_function
 from .utils import shift_and_resize_image, normalize_image, centering_image
 
+# 클로드 답변 :
+# 이 코드는 주로 이미지 데이터를 로드하고 전처리하는 기능을 담당하며, 딥러닝 모델 훈련을 위한 데이터 준비 과정을 다루고 있습니다.
 
 def get_batch_iter(examples, batch_size, augment, with_charid=False):
     # the transpose ops requires deterministic
@@ -62,7 +64,8 @@ def get_batch_iter(examples, batch_size, augment, with_charid=False):
 
     return batch_iter(with_charid=with_charid)
 
-
+# PickledImageProvider:
+# 피클된 이미지 데이터를 로드하는 클래스입니다.
 class PickledImageProvider(object):
     def __init__(self, obj_path, verbose):
         self.obj_path = obj_path
@@ -84,7 +87,9 @@ class PickledImageProvider(object):
                 print("unpickled total %d examples" % len(examples))
             return examples
 
-
+# TrainDataProvider:
+# 훈련 및 검증 데이터를 관리하는 클래스입니다.
+# 데이터 필터링, 배치 생성, 라벨 관리 등의 기능을 제공합니다.
 class TrainDataProvider(object):
     def __init__(self, data_dir, train_name="train.obj", val_name="val.obj", \
                  filter_by_font=None, filter_by_charid=None, verbose=True, val=True):
@@ -152,7 +157,10 @@ class TrainDataProvider(object):
     def get_train_val_path(self):
         return self.train_path, self.val_path
     
-    
+
+# save_fixed_sample:
+# 고정된 샘플 데이터를 저장하는 함수입니다.
+# 이미지를 중앙에 위치시키고 크기를 조정하는 작업을 수행합니다.
 def save_fixed_sample(sample_size, img_size, data_dir, save_dir, \
                       val=False, verbose=True, with_charid=True, resize_fix=90):
     data_provider = TrainDataProvider(data_dir, verbose=verbose, val=val)

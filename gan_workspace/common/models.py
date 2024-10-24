@@ -5,9 +5,12 @@ from .function import conv2d, deconv2d, lrelu, fc, embedding_lookup
 import warnings
 warnings.filterwarnings("ignore")
 
-
+# 인코더와 디코더를 이용해 가짜 이미지를 생성하는 역할을 한다.
+# 여기서 embeddings는 어떤 파라미터를 가지는가?
 def Generator(images, En, De, embeddings, embedding_ids, GPU=False, encode_layers=False):
+    # 인코더에 이미지를 넣는다.
     encoded_source, encode_layers = En(images)
+    #
     local_embeddings = embedding_lookup(embeddings, embedding_ids, GPU=GPU)
     if GPU:
         encoded_source = encoded_source.cuda()
@@ -91,7 +94,9 @@ class Decoder(nn.Module):
         
         return fake_target
     
-    
+
+
+# 생성된 가짜 이미지가 진짜인지 판별하는 역할을 한다.
 class Discriminator(nn.Module):
     def __init__(self, category_num, img_dim=2, disc_dim=64):
         super(Discriminator, self).__init__()

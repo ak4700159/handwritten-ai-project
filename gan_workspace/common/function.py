@@ -47,9 +47,12 @@ def dropout(p=0.2):
 def fc(input_size, output_size):
     return nn.Linear(input_size, output_size)
     
-    
+    # stddev = 표준 편차
 def init_embedding(embedding_num, embedding_dim, stddev=0.01):
+    # 정규분포를 생성하는 난수 함수, 정규분포에서 무작위 난수를 생성하여 텐서를 반환
+    # embedding_num * embedding_dim 차원의 텐서가 생성
     embedding = torch.randn(embedding_num, embedding_dim) * stddev
+    
     embedding = embedding.reshape((embedding_num, 1, 1, embedding_dim))
     return embedding
 

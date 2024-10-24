@@ -4,16 +4,14 @@ from PIL import Image
 
 import torch
 import torch.nn as nn
-from torchvision.utils import save_image
 
 from common.dataset import TrainDataProvider
 from common.function import init_embedding
 from common.models import Encoder, Decoder, Discriminator, Generator
 from common.utils import denorm_image, centering_image
 
-
+# 가장 큰 문제는 Trainer 클래스의 EMBEDDINGS.pkl 파일은 무엇인가에 대한 질문이다. 
 class Trainer:
-    
     def __init__(self, GPU, data_dir, fixed_dir, fonts_num, batch_size, img_size):
         self.GPU = GPU
         self.data_dir = data_dir
@@ -35,6 +33,7 @@ class Trainer:
         print("total batches:", self.total_batches)
 
 
+    # main 에서 실행
     def train(self, max_epoch, schedule, save_path, to_model_path, lr=0.001, \
               log_step=100, sample_step=350, fine_tune=False, flip_labels=False, \
               restore=None, from_model_path=False, with_charid=False, \
@@ -70,6 +69,7 @@ class Trainer:
 
 
         # L1 loss, binary real/fake loss, category loss, constant loss
+        # 손실값 추출
         if self.GPU:
             l1_criterion = nn.L1Loss(size_average=True).cuda()
             bce_criterion = nn.BCEWithLogitsLoss(size_average=True).cuda()
@@ -81,6 +81,7 @@ class Trainer:
 
 
         # optimizer
+        # 최적화
         if freeze_encoder:
             G_parameters = list(De.parameters())
         else:
@@ -91,10 +92,12 @@ class Trainer:
         # losses lists
         l1_losses, const_losses, category_losses, d_losses, g_losses = list(), list(), list(), list(), list()
 
-        # training
+        # training 시작
         count = 0
         for epoch in range(max_epoch):
             if (epoch + 1) % schedule == 0:
+                # 스케줄 값에 따라 학습률이 몇 번째 에포크에서 업데이트할지 정할 수 이싿.
+                # learning rate 지정
                 updated_lr = max(lr/2, 0.0002)
                 for param_group in d_optimizer.param_groups:
                     param_group['lr'] = updated_lr
@@ -217,6 +220,7 @@ class Trainer:
 
             if not model_save_step:
                 model_save_step = 5
+            # model_save_step 몇 번째 에포크 때 현재 모델들을 저장할지 결정
             if (epoch+1) % model_save_step == 0:
                 now = datetime.datetime.now()
                 now_date = now.strftime("%m%d")
@@ -234,6 +238,7 @@ class Trainer:
                                                         (int(prev_epoch)+epoch+1, \
                                                          now_date, now_time)))
 
+        # 학습이 다 끝나면 모델을 저장한다.
         # save model
         total_epoch = int(prev_epoch) + int(max_epoch)
         end = datetime.datetime.now()
@@ -253,7 +258,7 @@ class Trainer:
 
         return l1_losses, const_losses, category_losses, d_losses, g_losses
 
-
+# 이 함수는 사용하지 않을 듯
 def interpolation(data_provider, grids, fixed_char_ids, interpolated_font_ids, embeddings, \
                   En, De, batch_size, img_size=128, save_nrow=6, save_path=False, GPU=True):
     
