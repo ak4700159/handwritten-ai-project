@@ -11,7 +11,6 @@ from .utils import shift_and_resize_image, normalize_image, centering_image
 
 # 클로드 답변 :
 # 이 코드는 주로 이미지 데이터를 로드하고 전처리하는 기능을 담당하며, 딥러닝 모델 훈련을 위한 데이터 준비 과정을 다루고 있습니다.
-
 def get_batch_iter(examples, batch_size, augment, with_charid=False):
     # the transpose ops requires deterministic
     # batch size, thus comes the padding

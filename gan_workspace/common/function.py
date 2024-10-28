@@ -48,6 +48,7 @@ def fc(input_size, output_size):
     return nn.Linear(input_size, output_size)
     
     # stddev = 표준 편차
+    # 임베딩 파일이 없으면 초기값 넣어 생성한다?
 def init_embedding(embedding_num, embedding_dim, stddev=0.01):
     # 정규분포를 생성하는 난수 함수, 정규분포에서 무작위 난수를 생성하여 텐서를 반환
     # embedding_num * embedding_dim 차원의 텐서가 생성
@@ -56,7 +57,8 @@ def init_embedding(embedding_num, embedding_dim, stddev=0.01):
     embedding = embedding.reshape((embedding_num, 1, 1, embedding_dim))
     return embedding
 
-
+# cuda(), cpu(), data 이 함수를 이해하면 embeddings, embedding_ids 이해할 수 있을 거라고 생각
+# 일단 전이학습 모델을 저장해둔 것은 아닌 것으로 추정
 def embedding_lookup(embeddings, embedding_ids, GPU=False):
     batch_size = len(embedding_ids)
     embedding_dim = embeddings.shape[3]

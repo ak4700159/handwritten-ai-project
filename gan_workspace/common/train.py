@@ -10,7 +10,8 @@ from common.function import init_embedding
 from common.models import Encoder, Decoder, Discriminator, Generator
 from common.utils import denorm_image, centering_image
 
-# 가장 큰 문제는 Trainer 클래스의 EMBEDDINGS.pkl 파일은 무엇인가에 대한 질문이다. 
+# 문제는 Trainer 클래스의 EMBEDDINGS.pkl 파일은 무엇인가에 대한 질문이다. 
+# fixed dir 경로는 어떻게 지정되는가
 class Trainer:
     def __init__(self, GPU, data_dir, fixed_dir, fonts_num, batch_size, img_size):
         self.GPU = GPU

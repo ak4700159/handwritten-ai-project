@@ -43,7 +43,7 @@ font_list = []
 
 # 폰트별 MAX_RAMDOM_SELECTED_WORD 만큼 이미지를 생성한다
 src_path = f"{ft.SRC_PATH}/source_font.ttf"
-for i in range(1, MAX_FONT_COUNT):
+for i in range(10, MAX_FONT_COUNT):
     random_font_idx = i
     if random_font_idx in font_list : continue
 
@@ -68,7 +68,7 @@ for i in range(1, MAX_FONT_COUNT):
         # 이미지가 저장될 때 사용된 폰트 번호 _ 식별할 수 있는 문자값
         # 동일한 파일 존재시 처음부터.
         example_img.save(f"{FONT_DATASET_PATH}/{random_font_idx}_{ord(ch)}.png", 'png', optimize=True)
-        ch_list.append(ch)
+        ch_list.add(ch)
         count += 1
     
     ch_list = set()

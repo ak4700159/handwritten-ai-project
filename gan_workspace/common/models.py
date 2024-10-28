@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 def Generator(images, En, De, embeddings, embedding_ids, GPU=False, encode_layers=False):
     # 인코더에 이미지를 넣는다.
     encoded_source, encode_layers = En(images)
-    #
+    # embedding_lookup 
     local_embeddings = embedding_lookup(embeddings, embedding_ids, GPU=GPU)
     if GPU:
         encoded_source = encoded_source.cuda()
@@ -27,6 +27,9 @@ class Encoder(nn.Module):
     
     def __init__(self, img_dim=1, conv_dim=64):
         super(Encoder, self).__init__()
+        # 컨볼루션만 하고 활성화 함수는 사용 X 폴링 레이어도 없다
+        # conv2d : convolution(합성곱) 
+        # conv2d(입력 차원, 출력 차원, 커널 사이즈, 스트라이드, 패딩, )
         self.conv1 = conv2d(img_dim, conv_dim, k_size=5, stride=2, pad=2, dilation=2, lrelu=False, bn=False)
         self.conv2 = conv2d(conv_dim, conv_dim*2, k_size=5, stride=2, pad=2, dilation=2)
         self.conv3 = conv2d(conv_dim*2, conv_dim*4, k_size=4, stride=2, pad=1, dilation=1)
@@ -36,6 +39,7 @@ class Encoder(nn.Module):
         self.conv7 = conv2d(conv_dim*8, conv_dim*8)
         self.conv8 = conv2d(conv_dim*8, conv_dim*8)
     
+    # 순전파 함수
     def forward(self, images):
         encode_layers = dict()
         
