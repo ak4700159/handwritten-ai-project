@@ -8,14 +8,18 @@ warnings.filterwarnings("ignore")
 # 인코더와 디코더를 이용해 가짜 이미지를 생성하는 역할을 한다.
 # 여기서 embeddings는 어떤 파라미터를 가지는가?
 def Generator(images, En, De, embeddings, embedding_ids, GPU=False, encode_layers=False):
-    # 인코더에 이미지를 넣는다.
+    # 인코더에 이미지를 넣는다. -> 인코딩된 이미지 출력 + 인코더 레이어별 가중치값?
     encoded_source, encode_layers = En(images)
-    # embedding_lookup 
+    # embedding_lookup 함수는 카테고리 벡터를 로딩하는 함수
     local_embeddings = embedding_lookup(embeddings, embedding_ids, GPU=GPU)
     if GPU:
         encoded_source = encoded_source.cuda()
         local_embeddings = local_embeddings.cuda()
+    # 인코더를 거친 낮은 차원의 백터에다가 스타일 백터(카테고리 백터)를 연결한다.
+    # torch.cat(embedded , encode_layers)를 1차원 방향(가로)으로 합친다.
     embedded = torch.cat((encoded_source, local_embeddings), 1)
+
+    # 디코더에서 나온 이미지가 가짜 이미지다.
     fake_target = De(embedded, encode_layers)
     if encode_layers:
         return fake_target, encoded_source, encode_layers
@@ -24,12 +28,11 @@ def Generator(images, En, De, embeddings, embedding_ids, GPU=False, encode_layer
 
 
 class Encoder(nn.Module):
-    
     def __init__(self, img_dim=1, conv_dim=64):
         super(Encoder, self).__init__()
         # 컨볼루션만 하고 활성화 함수는 사용 X 폴링 레이어도 없다
         # conv2d : convolution(합성곱) 
-        # conv2d(입력 차원, 출력 차원, 커널 사이즈, 스트라이드, 패딩, )
+        # conv2d(입력 채널 개수, 출력 채널 개수, k_size = 커널 사이즈, stride = 스트라이드, pad = 패딩값, dilation = 필터 간격? lrelu )
         self.conv1 = conv2d(img_dim, conv_dim, k_size=5, stride=2, pad=2, dilation=2, lrelu=False, bn=False)
         self.conv2 = conv2d(conv_dim, conv_dim*2, k_size=5, stride=2, pad=2, dilation=2)
         self.conv3 = conv2d(conv_dim*2, conv_dim*4, k_size=4, stride=2, pad=1, dilation=1)
@@ -43,6 +46,8 @@ class Encoder(nn.Module):
     def forward(self, images):
         encode_layers = dict()
         
+        # 인코더에서 특정 활성화 함수 없이 컨볼루션 연산만으로
+        # 출력 계층까지 향한다.
         e1 = self.conv1(images)
         encode_layers['e1'] = e1
         e2 = self.conv2(e1)
@@ -60,11 +65,12 @@ class Encoder(nn.Module):
         encoded_source = self.conv8(e7)
         encode_layers['e8'] = encoded_source
         
+        # encoded_source 최종 데이터 소스
+        # encode_layers 각 컨볼루션 이후 데이터 확인용
         return encoded_source, encode_layers
     
     
 class Decoder(nn.Module):
-    
     def __init__(self, img_dim=1, embedded_dim=640, conv_dim=64):
         super(Decoder, self).__init__()
         self.deconv1 = deconv2d(embedded_dim, conv_dim*8, dropout=True)
