@@ -3,6 +3,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+from functools import cache
 import utils
 import sys
 import glob
@@ -48,7 +49,6 @@ def draw_single_char(ch, font, canvas_size):
         return None
     
     return image
-
 
 def draw_example(ch, src_font, dst_font, canvas_size):
     # 특정 스타일로 만들어낸 단일 글자 생성(target image)

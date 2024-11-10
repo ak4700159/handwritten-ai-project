@@ -29,6 +29,7 @@ class Trainer:
         self.fixed_target = torch.load(os.path.join(fixed_dir, 'fixed_target.pkl'))
         self.fixed_label = torch.load(os.path.join(fixed_dir, 'fixed_label.pkl'))
         
+        # val train 데이터가 저장된 위치
         self.data_provider = TrainDataProvider(self.data_dir)
         self.total_batches = self.data_provider.compute_total_batch_num(self.batch_size)
         print("total batches:", self.total_batches)
@@ -47,6 +48,7 @@ class Trainer:
             L1_penalty, Lconst_penalty = 500, 1000
 
         # Get Models
+        # 생성자 = Encoder + Decoder
         En = Encoder()
         De = Decoder()
         D = Discriminator(category_num=self.fonts_num)
@@ -57,6 +59,7 @@ class Trainer:
 
         # Use pre-trained Model
         # restore에 [encoder_path, decoder_path, discriminator_path] 형태로 인자 넣기
+        # 기존에 학습이 진행 중이던 모델 사용
         if restore:
             encoder_path, decoder_path, discriminator_path = restore
             prev_epoch = int(encoder_path.split('-')[0])
@@ -65,12 +68,13 @@ class Trainer:
             D.load_state_dict(torch.load(os.path.join(from_model_path, discriminator_path)))
             print("%d epoch trained model has restored" % prev_epoch)
         else:
+            # 그게 아니라면 새로운 모델 생성 그래서 epoch = 0
             prev_epoch = 0
             print("New model training start")
 
 
         # L1 loss, binary real/fake loss, category loss, constant loss
-        # 손실값 추출
+        # 손실값 추출 함수 바인딩
         if self.GPU:
             l1_criterion = nn.L1Loss(size_average=True).cuda()
             bce_criterion = nn.BCEWithLogitsLoss(size_average=True).cuda()
@@ -82,7 +86,7 @@ class Trainer:
 
 
         # optimizer
-        # 최적화
+        # 최적화 함수 바인딩
         if freeze_encoder:
             G_parameters = list(De.parameters())
         else:
@@ -108,9 +112,12 @@ class Trainer:
                     print("decay learning rate from %.5f to %.5f" % (lr, updated_lr))
                 lr = updated_lr
 
+            # 학습 데이터 추출 charid 는 무엇인가 폰트 넘버?
             train_batch_iter = self.data_provider.get_train_iter(self.batch_size, \
                                                             with_charid=with_charid)   
+            # 추출한 학습 데이터를 이용해 train 진행
             for i, batch in enumerate(train_batch_iter):
+                # batch 안에 이미지, 폰트 객체, 글자정보? 가 담겨있다.
                 if with_charid:
                     font_ids, char_ids, batch_images = batch
                 else:
