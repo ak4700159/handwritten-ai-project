@@ -23,7 +23,6 @@ def generate_random_hangul_and_ascii():
     
     # 유니코드를 문자로 변환
     hangul_char = chr(char_code)
-    
 
     # 문자를 아스키 코드로 변환
     # utf8_bytes = list(hangul_char.encode('utf-8'))

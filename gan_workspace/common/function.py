@@ -15,6 +15,10 @@ def batch_norm(c_out, momentum=0.1):
     return nn.BatchNorm2d(c_out, momentum=momentum)
 
 
+# LeakyReLU 활성화 함수는 relu함수와 다르게 임계치가 0보다 작으면 0.01을 곱한다.
+# 이를 통해 relu함수에서 발생한 knock out 문제를 거의 해결한다. 하지만 속도면에서 relu가 더 좋다
+
+# BatchNorm2d : 입력값이 4차원(높이 * 가로 * 세로 * 개수)인 경우
 def conv2d(c_in, c_out, k_size=3, stride=2, pad=1, dilation=1, bn=True, lrelu=True, leak=0.2):
     layers = []
     if lrelu:
@@ -57,8 +61,7 @@ def init_embedding(embedding_num, embedding_dim, stddev=0.01):
     embedding = embedding.reshape((embedding_num, 1, 1, embedding_dim))
     return embedding
 
-# cuda(), cpu(), data 이 함수를 이해하면 embeddings, embedding_ids 이해할 수 있을 거라고 생각
-# 일단 전이학습 모델을 저장해둔 것은 아닌 것으로 추정
+#카테고리 백터 가공?
 def embedding_lookup(embeddings, embedding_ids, GPU=False):
     batch_size = len(embedding_ids)
     embedding_dim = embeddings.shape[3]
@@ -67,7 +70,7 @@ def embedding_lookup(embeddings, embedding_ids, GPU=False):
         if GPU:
             local_embeddings.append(embeddings[id_].cpu().numpy())
         else:
-            local_embeddings.append(embeddings[id_].data.numpy())
+            local_embeddings.append(embeddings[id_].data.numpy()) 
     local_embeddings = torch.from_numpy(np.array(local_embeddings))
     if GPU:
         local_embeddings = local_embeddings.cuda()
