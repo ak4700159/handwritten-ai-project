@@ -75,6 +75,7 @@ class PickledImageProvider(object):
             examples = list()
             while True:
                 try:
+                    # 저장된 객체를 불러온다.
                     e = pickle.load(of)
                     examples.append(e)
                 except EOFError:
@@ -88,29 +89,36 @@ class PickledImageProvider(object):
 # TrainDataProvider:
 # 훈련 및 검증 데이터를 관리하는 클래스입니다.
 # 데이터 필터링, 배치 생성, 라벨 관리 등의 기능을 제공합니다.
+# 즉, 75,000개의 글자 데이터를 생성 후 가공하는 역할. -> save_fixed_sample를 통해 fixed_label, fixed_label, fixed_label 생성
 class TrainDataProvider(object):
-    def __init__(self, data_dir, train_name="train.obj", val_name="val.obj", \
+    def __init__(self, data_dir, train_name="train.pkl", val_name="val.pkl", \
                  filter_by_font=None, filter_by_charid=None, verbose=True, val=True):
         self.data_dir = data_dir
         self.filter_by_font = filter_by_font
         self.filter_by_charid = filter_by_charid
+        # pickle_examples 함수를 통해 생성된 train val 둘 다 같은 경로에 저장되어 있어야됨
         self.train_path = os.path.join(self.data_dir, train_name)
         self.val_path = os.path.join(self.data_dir, val_name)
+
+        # 기본적으로 train.obj를 불러온다.
         self.train = PickledImageProvider(self.train_path, verbose)
         if val:
             self.val = PickledImageProvider(self.val_path, verbose)
+
         if self.filter_by_font:
             if verbose:
                 print("filter by label ->", filter_by_font)
             self.train.examples = [e for e in self.train.examples if e[0] in self.filter_by_font]
             if val:
                 self.val.examples = [e for e in self.val.examples if e[0] in self.filter_by_font]
+
         if self.filter_by_charid:
             if verbose:
                 print("filter by char ->", filter_by_charid)
             self.train.examples = [e for e in self.train.examples if e[1] in filter_by_charid]
             if val:
                 self.val.examples = [e for e in self.val.examples if e[1] in filter_by_charid]
+
         if verbose:
             if val:
                 print("train examples -> %d, val examples -> %d" % (len(self.train.examples), len(self.val.examples)))
@@ -156,11 +164,15 @@ class TrainDataProvider(object):
         return self.train_path, self.val_path
     
 
-# save_fixed_sample:
-# 고정된 샘플 데이터를 저장하는 함수입니다.
+# 해당 함수는 고정된 샘플 데이터를 저장하는 함수입니다.
 # 이미지를 중앙에 위치시키고 크기를 조정하는 작업을 수행합니다.
+# sample_size = 배치사이즈 = 16
+# img_size = 이미지 크기 = 126
+# data_dir = train.pkl, val.pkl 데이터 경로
+# save_dir = fixed_source.pkl, fixed_target.pkl, fixed_label.pkl = 저장될 경로
 def save_fixed_sample(sample_size, img_size, data_dir, save_dir, \
                       val=False, verbose=True, with_charid=True, resize_fix=90):
+    # 
     data_provider = TrainDataProvider(data_dir, verbose=verbose, val=val)
     if not val:
         train_batch_iter = data_provider.get_train_iter(sample_size, with_charid=with_charid)
@@ -177,6 +189,8 @@ def save_fixed_sample(sample_size, img_size, data_dir, save_dir, \
         fixed_target = fixed_batch[:, 0, :, :].reshape(sample_size, 1, img_size, img_size)
 
         # centering
+        # zip() 함수는 여러 개의 순회 가능한 객체를 인자로 받고 각 객체가 담고 있는 원소를 튜플의 형태로 차례로
+        # 접근할 수 있는 반복자를 반환한다.
         for idx, (image_S, image_T) in enumerate(zip(fixed_source, fixed_target)):
             image_S = image_S.cpu().detach().numpy().reshape(img_size, img_size)
             image_S = np.array(list(map(round_function, image_S.flatten()))).reshape(128, 128)
@@ -187,6 +201,7 @@ def save_fixed_sample(sample_size, img_size, data_dir, save_dir, \
             image_T = centering_image(image_T, resize_fix=resize_fix)
             fixed_target[idx] = torch.tensor(image_T).view([1, img_size, img_size])
 
+        # fond_ids  = label 을 의미
         fixed_label = np.array(font_ids)
         source_with_label = [(label, image_S.cpu().detach().numpy()) \
                              for label, image_S in zip(fixed_label, fixed_source)]
@@ -197,6 +212,8 @@ def save_fixed_sample(sample_size, img_size, data_dir, save_dir, \
         fixed_source = torch.tensor(np.array([i[1] for i in source_with_label])).cuda()
         fixed_target = torch.tensor(np.array([i[1] for i in target_with_label])).cuda()
         fixed_label = sorted(fixed_label)
+
+        # [라벨 : 원본 고딕체 글자 : 다양한 폰트의 글자] 25 * 2000 = 50,000
         torch.save(fixed_source, os.path.join(save_dir, 'fixed_source.pkl'))
         torch.save(fixed_target, os.path.join(save_dir, 'fixed_target.pkl'))
         torch.save(fixed_label, os.path.join(save_dir, 'fixed_label.pkl'))

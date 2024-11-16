@@ -43,6 +43,7 @@ def denorm_image(x):
 
 
 def read_split_image(img):
+    # 해당 함수가 없음 
     mat = misc.imread(img).astype(np.float)
     side = int(mat.shape[1] / 2)
     assert side * 2 == mat.shape[1]

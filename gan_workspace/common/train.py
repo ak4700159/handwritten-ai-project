@@ -12,6 +12,7 @@ from common.utils import denorm_image, centering_image
 
 # 문제는 Trainer 클래스의 EMBEDDINGS.pkl 파일은 무엇인가에 대한 질문이다. 
 # fixed dir 경로는 어떻게 지정되는가
+# fixed_dir = ./fixed_dir
 class Trainer:
     def __init__(self, GPU, data_dir, fixed_dir, fonts_num, batch_size, img_size):
         self.GPU = GPU
@@ -22,12 +23,19 @@ class Trainer:
         self.img_size = img_size
         
         self.embeddings = torch.load(os.path.join(fixed_dir, 'EMBEDDINGS.pkl'))
+        # 폰트의 개수 = 25
         self.embedding_num = self.embeddings.shape[0]
+        # 카테고리 백테 차원 = 128
         self.embedding_dim = self.embeddings.shape[3]
         
+        # Generator 한테 fixed_label, fixed_source 이 전달되고 가짜 이미지를 받아온다.
+        # 고정된 원본 이미지 -> 고딕체 글자
         self.fixed_source = torch.load(os.path.join(fixed_dir, 'fixed_source.pkl'))
+        # 고정된 타겟 이미지 -> 폰트별 글자
         self.fixed_target = torch.load(os.path.join(fixed_dir, 'fixed_target.pkl'))
+        # 라벨 양식 = 글자 폰트 인덱스
         self.fixed_label = torch.load(os.path.join(fixed_dir, 'fixed_label.pkl'))
+        # 위 세 항목은 서로 같은 인덱스를 가지게 된다.
         
         # val train 데이터가 저장된 위치
         self.data_provider = TrainDataProvider(self.data_dir)
@@ -42,6 +50,7 @@ class Trainer:
               freeze_encoder=False, save_nrow=8, model_save_step=None, resize_fix=90):
 
         # Fine Tuning coefficient
+        # 파인튜닝이란?! 
         if not fine_tune:
             L1_penalty, Lconst_penalty = 100, 15
         else:
@@ -108,16 +117,17 @@ class Trainer:
                     param_group['lr'] = updated_lr
                 for param_group in g_optimizer.param_groups:
                     param_group['lr'] = updated_lr
-                if lr !=  updated_lr:
+                if lr != updated_lr:
                     print("decay learning rate from %.5f to %.5f" % (lr, updated_lr))
                 lr = updated_lr
 
-            # 학습 데이터 추출 charid 는 무엇인가 폰트 넘버?
+            # 학습 데이터 추출 charid = 글자식별 번호
+            # train_batch_iter는 배치 사이즈만큼 train 데이터를 자른다.
             train_batch_iter = self.data_provider.get_train_iter(self.batch_size, \
                                                             with_charid=with_charid)   
             # 추출한 학습 데이터를 이용해 train 진행
             for i, batch in enumerate(train_batch_iter):
-                # batch 안에 이미지, 폰트 객체, 글자정보? 가 담겨있다.
+                # batch 안에 이미지, 폰트 객체, 글자정보가 담겨있다.
                 if with_charid:
                     font_ids, char_ids, batch_images = batch
                 else:
@@ -221,6 +231,7 @@ class Trainer:
                 if (i+1) % sample_step == 0:
                     fixed_fake_images = Generator(self.fixed_source, En, De, \
                                                   self.embeddings, self.fixed_label, GPU=self.GPU)[0]
+                    # 이거 대체 함수 찾아야됨
                     save_image(denorm_image(fixed_fake_images.data), \
                                os.path.join(save_path, 'fake_samples-%d-%d.png' % \
                                             (int(prev_epoch)+epoch+1, i+1)), \
