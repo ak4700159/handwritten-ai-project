@@ -31,7 +31,7 @@ def conv2d(c_in, c_out, k_size=3, stride=2, pad=1, dilation=1, bn=True, lrelu=Tr
 
 def deconv2d(c_in, c_out, k_size=3, stride=1, pad=1, dilation=1, bn=True, dropout=False, p=0.5):
     layers = []
-    layers.append(nn.LeakyReLU(0.2))
+    layers.append(nn.LeakyReLU(0.2), inplace = False)
     layers.append(nn.ConvTranspose2d(c_in, c_out, k_size, stride, pad))
     if bn:
         layers.append(nn.BatchNorm2d(c_out))

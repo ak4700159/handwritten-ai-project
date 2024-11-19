@@ -17,7 +17,8 @@ def Generator(images, En, De, embeddings, embedding_ids, GPU=False, encode_layer
         local_embeddings = local_embeddings.cuda()
     # 인코더를 거친 낮은 차원의 백터에다가 스타일 백터(카테고리 백터)를 연결한다.
     # torch.cat(embedded , encode_layers)를 1차원 방향(가로)으로 합친다.
-    embedded = torch.cat((encoded_source, local_embeddings), 1)
+    embedded = torch.cat([encoded_source, local_embeddings], 1)
+
 
     # 디코더에서 나온 이미지가 가짜 이미지다.
     fake_target = De(embedded, encode_layers)
@@ -86,7 +87,7 @@ class Decoder(nn.Module):
     def forward(self, embedded, encode_layers):
         
         d1 = self.deconv1(embedded)
-        d1 = torch.cat((d1, encode_layers['e7']), dim=1)
+        d1 = torch.cat([d1, encode_layers['e7']], dim=1)
         d2 = self.deconv2(d1)
         d2 = torch.cat((d2, encode_layers['e6']), dim=1)
         d3 = self.deconv3(d2)
